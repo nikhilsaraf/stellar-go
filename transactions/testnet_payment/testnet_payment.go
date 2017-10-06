@@ -16,7 +16,7 @@ const baseUrlLocal = "http://localhost:8000"
 
 func main() {
     localPtr := flag.Bool("l", false, "(optional) whether we should use the local horizon server @ " + baseUrlLocal)
-    fromSeedPtr := flag.String("fromSeed", "", "seed of the sender's account")
+    fromSeedPtr := flag.String("fromSeed", "", "seed of the source's account")
     toAddressPtr := flag.String("toAddress", "", "destination address of the receiver's account")
     amountPtr := flag.Float64("amount", 0.0, "amount to be sent, must be > 0.0")
     memoPtr := flag.String("memo", "", "(optional) memo to include with the payment")
@@ -60,18 +60,28 @@ func main() {
     }
 
     // validate accounts
-    loadAccount(horizonClient, sourceAddress, "source")
-    loadAccount(horizonClient, destinationAddress, "destination")
-
+    sourceAccount := loadAccount(horizonClient, sourceAddress, "source")
+    destinationAccount := loadAccount(horizonClient, destinationAddress, "destination")
+    
     amountStr := fmt.Sprintf("%v", amount)
     var assetAmount builder.PaymentMutator
     if asset != "" {
         assetParts := strings.SplitN(asset, ":", 2)
-        assetAmount = builder.CreditAmount{assetParts[0], assetParts[1], amountStr}
-        fmt.Println("using non-native asset:", assetAmount)
+        creditAmount := builder.CreditAmount{assetParts[0], assetParts[1], amountStr}
+        fmt.Println("using non-native asset:", creditAmount)
+
+        // test that both accounts have the asset
+        if !hasAsset(&sourceAccount, &creditAmount) {
+            log.Fatal(fmt.Sprintf("source account does not hold asset: %v", creditAmount))
+        }
+        if !hasAsset(&destinationAccount, &creditAmount) {
+            log.Fatal(fmt.Sprintf("destination account does not trust asset: %v", creditAmount))
+        }
+        assetAmount = creditAmount
     } else {
         assetAmount = builder.NativeAmount{amountStr}
     }
+
 
     txn := builder.Transaction(
         builder.SourceAccount{sourceSeed},
@@ -116,4 +126,13 @@ func loadAccount(horizonClient *horizon.Client, publicKey string, accountName st
         log.Println("   ", balance)
     }
     return account
+}
+
+func hasAsset(account *horizon.Account, creditAmount *builder.CreditAmount) bool {
+    for _, balance := range (*account).Balances {
+        if balance.Asset.Code == (*creditAmount).Code && balance.Asset.Issuer == (*creditAmount).Issuer {
+            return true
+        }
+    }
+    return false
 }
