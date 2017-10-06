@@ -111,6 +111,9 @@ func loadAccount(horizonClient *horizon.Client, publicKey string, accountName st
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println("Native Balance for account (" + accountName + "):", account.GetNativeBalance())
+    fmt.Println("Balances for account (" + accountName + "):")
+    for _, balance := range account.Balances {
+        log.Println("   ", balance)
+    }
     return account
 }
