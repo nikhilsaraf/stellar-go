@@ -8,7 +8,7 @@ import (
     "net/http"
     "github.com/stellar/go/keypair"
     "github.com/stellar/go/clients/horizon"
-    builder "github.com/stellar/go/build"
+    b "github.com/stellar/go/build"
 )
 
 const baseUrlDefault = "https://horizon-testnet.stellar.org"
@@ -64,10 +64,10 @@ func main() {
     destinationAccount := loadAccount(horizonClient, destinationAddress, "destination")
     
     amountStr := fmt.Sprintf("%v", amount)
-    var assetAmount builder.PaymentMutator
+    var assetAmount b.PaymentMutator
     if asset != "" {
         assetParts := strings.SplitN(asset, ":", 2)
-        creditAmount := builder.CreditAmount{assetParts[0], assetParts[1], amountStr}
+        creditAmount := b.CreditAmount{assetParts[0], assetParts[1], amountStr}
         fmt.Println("using non-native asset:", creditAmount)
 
         // test that both accounts have the asset
@@ -79,21 +79,21 @@ func main() {
         }
         assetAmount = creditAmount
     } else {
-        assetAmount = builder.NativeAmount{amountStr}
+        assetAmount = b.NativeAmount{amountStr}
     }
 
 
-    txn := builder.Transaction(
-        builder.SourceAccount{sourceSeed},
-        builder.AutoSequence{horizonClient},
-        builder.TestNetwork,
-        builder.Payment(
-            builder.Destination{destinationAddress},
+    txn := b.Transaction(
+        b.SourceAccount{sourceSeed},
+        b.AutoSequence{horizonClient},
+        b.TestNetwork,
+        b.Payment(
+            b.Destination{destinationAddress},
             assetAmount,
         ),
     )
     if memo != "" {
-        txn.Mutate(builder.MemoText{memo})
+        txn.Mutate(b.MemoText{memo})
     }
     // sign
     txnS := txn.Sign(sourceSeed)
@@ -128,7 +128,7 @@ func loadAccount(horizonClient *horizon.Client, publicKey string, accountName st
     return account
 }
 
-func hasAsset(account *horizon.Account, creditAmount *builder.CreditAmount) bool {
+func hasAsset(account *horizon.Account, creditAmount *b.CreditAmount) bool {
     for _, balance := range (*account).Balances {
         if balance.Asset.Code == (*creditAmount).Code && balance.Asset.Issuer == (*creditAmount).Issuer {
             return true
