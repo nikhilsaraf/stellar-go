@@ -8,6 +8,7 @@ import (
     "github.com/stellar/go/keypair"
     "github.com/stellar/go/clients/horizon"
     b "github.com/stellar/go/build"
+    "github.com/kr/pretty"
 )
 
 const baseUrlDefault = "https://horizon-testnet.stellar.org"
@@ -130,7 +131,8 @@ func main() {
         log.Fatal(err3)
     }
     fmt.Println("transaction posted in ledger:", resp.Ledger)
-    fmt.Println("result:", resp.Result)
+    fmt.Println("response:")
+    pretty.Println(resp)
 
     // print final balances by reloading accounts
     loadAccount(horizonClient, sourceAddress, "source")
