@@ -54,6 +54,10 @@ func main() {
         flag.PrintDefaults()
         return
     }
+    if *amountPtr == 0 && *offerIdPtr == 0 {
+        flag.PrintDefaults()
+        return
+    }
 
     baseUrl := baseUrlDefault
     if *localPtr {
@@ -71,7 +75,7 @@ func main() {
     price := *pricePtr
     amount := b.Amount(fmt.Sprintf("%v", *amountPtr))
     passive := *passivePtr
-    offerId := *offerIdPtr
+    offerId := b.OfferID(uint64(*offerIdPtr))
 
     fmt.Println("local:", *localPtr)
     fmt.Println("baseUrl:", baseUrl)
@@ -95,7 +99,11 @@ func main() {
 
     rate := b.Rate{ sellingAsset, buyingAsset, b.Price(price) }
     var ob b.ManageOfferBuilder
-    if passive {
+    if amount == "0" {
+        ob = b.DeleteOffer(rate, offerId)
+    } else if offerId != 0 {
+        ob = b.UpdateOffer(rate, amount, offerId)
+    } else if passive {
         ob = b.CreatePassiveOffer(rate, amount)
     } else {
         ob = b.CreateOffer(rate, amount)
@@ -122,6 +130,7 @@ func main() {
         log.Fatal(err3)
     }
     fmt.Println("transaction posted in ledger:", resp.Ledger)
+    fmt.Println("result:", resp.Result)
 
     // print final balances by reloading accounts
     loadAccount(horizonClient, sourceAddress, "source")
