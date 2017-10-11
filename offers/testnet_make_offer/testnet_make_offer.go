@@ -102,10 +102,10 @@ func main() {
     var ob b.ManageOfferBuilder
     if amount == "0" {
         ob = b.DeleteOffer(rate, offerId)
-    } else if offerId != 0 {
-        ob = b.UpdateOffer(rate, amount, offerId)
     } else if passive {
         ob = b.CreatePassiveOffer(rate, amount)
+    } else if offerId != 0 {
+        ob = b.UpdateOffer(rate, amount, offerId)
     } else {
         ob = b.CreateOffer(rate, amount)
     }
