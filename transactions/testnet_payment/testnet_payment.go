@@ -67,11 +67,12 @@ func main() {
     var assetAmount b.PaymentMutator
     if asset != "" {
         assetParts := strings.SplitN(asset, ":", 2)
-        creditAmount := b.CreditAmount{assetParts[0], assetParts[1], amountStr}
+        issuerAddress := assetParts[1]
+        creditAmount := b.CreditAmount{assetParts[0], issuerAddress, amountStr}
         fmt.Println("using non-native asset:", creditAmount)
 
-        // test that both accounts have the asset
-        if !hasAsset(&sourceAccount, &creditAmount) {
+        // if source account is issuer it does not need to hold the asset
+        if !hasAsset(&sourceAccount, &creditAmount) && sourceAddress != issuerAddress {
             log.Fatal(fmt.Sprintf("source account does not hold asset: %v", creditAmount))
         }
         if !hasAsset(&destinationAccount, &creditAmount) {
