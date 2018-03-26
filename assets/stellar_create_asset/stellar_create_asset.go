@@ -63,13 +63,21 @@ func main() {
 
     loadAccount(client, issuerAddress)
     loadAccount(client, receiverAddress)
-    txn := b.Transaction(
+    txn, err := b.Transaction(
         b.SourceAccount{receiverAddress},
         b.AutoSequence{client},
         net,
         trust,
     )
-    txnS := txn.Sign(receiverSeed)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    txnS, err := txn.Sign(receiverSeed)
+    if err != nil {
+        log.Fatal(err)
+    }
+
     txn64, err := txnS.Base64()
     if err != nil {
         log.Fatal(err)
