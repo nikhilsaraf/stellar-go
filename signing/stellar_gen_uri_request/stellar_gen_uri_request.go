@@ -9,16 +9,18 @@ import (
     "strings"
 
     b "github.com/stellar/go/build"
+    kp "github.com/stellar/go/keypair"
 )
 
 func main() {
     destinationAddress, memo, creditAmount := parseInputs()
 
     // 1. build the partial transaction (excludes the source account and sequence number)
+    emptyAddress := kp.Master("").Address()
     txn, e := b.Transaction(
-        // this is an arbitrary source account which will be replaced by the wallet
-        b.SourceAccount{AddressOrSeed: "GCP2SLIG2ULO3LCKXOHAUJL635Q3D4IYGNTZY7T5WE4XXI5C2NDVJYCZ"},
-        // does not need the sequence number here, it will be added by the wallet
+        // since the address is the empty sentinel value, the wallet will need to fill it in along with the sequence number
+        b.SourceAccount{AddressOrSeed: emptyAddress},
+        // meaningless to have a sequence number here since the source account is the empty address and will be replaced by the wallet
         b.TestNetwork,
         b.Payment(
             b.Destination{AddressOrSeed: destinationAddress},
@@ -50,7 +52,7 @@ func main() {
     // 4. url encode
     urlEncoded := url.QueryEscape(txnB64)
 
-    fmt.Println("stellar://pay/" + urlEncoded)
+    fmt.Println("stellar://txn/" + urlEncoded)
 }
 
 // boilerplate to parse command line args and to make this implementation functional
@@ -62,11 +64,10 @@ func parseInputs() (destinationAddress string, memo string, creditAmount b.Payme
     flag.Parse()
 
     if *toAddressPtr == "" || *amountPtr <= 0 {
+        fmt.Println("Params:")
         flag.PrintDefaults()
         os.Exit(1)
     }
-    destinationAddress = *toAddressPtr
-    memo = *memoPtr
 
     amountStr := fmt.Sprintf("%v", *amountPtr)
     if *assetPtr != "" {
@@ -77,5 +78,5 @@ func parseInputs() (destinationAddress string, memo string, creditAmount b.Payme
         creditAmount = b.NativeAmount{Amount: amountStr}
     }
 
-    return
+    return *toAddressPtr, *memoPtr, creditAmount
 }
