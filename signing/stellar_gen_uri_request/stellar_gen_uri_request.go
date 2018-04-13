@@ -52,7 +52,7 @@ func main() {
     // 4. url encode
     urlEncoded := url.QueryEscape(txnB64)
 
-    fmt.Println("stellar://txn/" + urlEncoded)
+    fmt.Println("stellar://tx/?xdr=" + urlEncoded)
 }
 
 // boilerplate to parse command line args and to make this implementation functional
