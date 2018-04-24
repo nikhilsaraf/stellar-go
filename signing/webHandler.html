@@ -1,0 +1,31 @@
+<html>
+    <head>
+        <title>Stellar Payment Request Handler</title>
+        <script type="text/javascript">
+            // register as a handler for the "web+stellar" scheme, redirect url needs to be on the same domain of this current page
+            window.navigator.registerProtocolHandler("web+stellar", "http://localhost:8000/webHandler.html?req=%s", "My Web Wallet");
+
+            window.onload = function() {
+                // get the payment request url from our handler's url
+                var url_string = window.location.href;
+                var url = new URL(url_string);
+                var req_url_string = url.searchParams.get("req");
+                console.log(req_url_string)
+                document.getElementById("req").innerHTML = req_url_string;
+
+                var req_url = new URL(req_url_string);
+                var xdr_string = req_url.searchParams.get("xdr");
+                console.log(xdr_string)
+                document.getElementById("xdr").innerHTML = xdr_string;
+            }
+        </script>
+    </head>
+    <body>
+        Stellar payment request URI:
+        <p id="req"></p>
+        <br/>
+        <br/>
+        xdr to be signed:
+        <p id="xdr"></p>
+    </body>
+</html>
