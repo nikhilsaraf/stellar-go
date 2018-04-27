@@ -24,24 +24,51 @@ func main() {
 	if e != nil {
 		log.Fatal(e)
 	}
-	log.Println("data is valid:", data)
+	log.Println("data is valid")
+
+	// append signature to original URI request
+	log.Printf("signed URI request: %s&signature=%s\n", data, urlEncodedBase64Signature)
+}
+
+// -------------------------------------------------------------------------
+// ---------------------------- P A Y L O A D ------------------------------
+// -------------------------------------------------------------------------
+func constuctPayload(data string) []byte {
+	// prefix 4 to denote application-based signing using 36 bytes
+	var prefixSelectorBytes [36]byte
+	prefixSelectorBytes = [36]byte{}
+	prefixSelectorBytes[35] = 4
+
+	// standardized namespace prefix for this signing use case
+	prefix := "stellar.sep.7 - URI Scheme"
+
+	// variable number of bytes for the prefix + data
+	var uriWithPrefixBytes []byte
+	uriWithPrefixBytes = []byte(prefix + data)
+
+	var result []byte
+	result = append(result, prefixSelectorBytes[:]...) // 36 bytes
+	result = append(result, uriWithPrefixBytes[:]...)  // variable length bytes
+	return result
 }
 
 // -------------------------------------------------------------------------
 // ---------------------------- S I G N I N G ------------------------------
 // -------------------------------------------------------------------------
 func sign(data string, stellarPrivateKey string) string {
-	kp := keypair.MustParse(stellarPrivateKey)
+	// construct the payload
+	payloadBytes := constuctPayload(data)
 
 	// sign the data
-	signatureBytes, e := kp.Sign([]byte(data))
+	kp := keypair.MustParse(stellarPrivateKey)
+	signatureBytes, e := kp.Sign(payloadBytes)
 	if e != nil {
 		log.Fatal(e)
 	}
 
 	// encode the signature as base64
 	base64Signature := base64.StdEncoding.EncodeToString(signatureBytes)
-        log.Println(base64Signature)
+	log.Println("base64 signature:", base64Signature)
 
 	// url-encode it
 	urlEncodedBase64Signature := url.QueryEscape(base64Signature)
@@ -52,9 +79,11 @@ func sign(data string, stellarPrivateKey string) string {
 // ------------------------- V E R I F I C A T I O N -----------------------
 // -------------------------------------------------------------------------
 func verify(data string, urlEncodedBase64Signature string, stellarPublicKey string) error {
-	kp := keypair.MustParse(stellarPublicKey)
+	// construct the payload so we can verify it
+	payloadBytes := constuctPayload(data)
 
 	// decode the url-encoded signature
+	kp := keypair.MustParse(stellarPublicKey)
 	base64Signature, e := url.QueryUnescape(urlEncodedBase64Signature)
 	if e != nil {
 		log.Fatal(e)
@@ -67,5 +96,5 @@ func verify(data string, urlEncodedBase64Signature string, stellarPublicKey stri
 	}
 
 	// validate it against the public key
-	return kp.Verify([]byte(data), signatureBytes)
+	return kp.Verify(payloadBytes, signatureBytes)
 }
