@@ -32,21 +32,28 @@ import (
 var emptyAddress = kp.Master("").Address()
 
 func main() {
-    secretKey, encodedInputTxn := parseInputs()
-    horizonClient := horizon.DefaultTestNetClient
+    secretKey, uriString := parseInputs()
 
-    // 1. decode the Transaction
+    // 1. extract the URL-encoded xdr string from URI
+    uri, e := url.ParseRequestURI(uriString)
+    if e != nil {
+        log.Fatal(e)
+    }
+    encodedInputTxn := uri.Query().Get("xdr")
+
+    // 2. decode the Transaction
     unescapedTxn := unescape(encodedInputTxn)
 
-    // 2. decode the base64 XDR
+    // 3. decode the base64 XDR
     txn := decodeFromBase64(unescapedTxn)
 
-    // 3. check the source account and mutate the transaction inside the transaction envelope if needed:
+    // 4. check the source account and mutate the transaction inside the transaction envelope if needed:
     //     a. update the source account
     //     b. set the sequence number
     //     c. set the network passphrase
+    horizonClient := horizon.DefaultTestNetClient
     if txn.E.Tx.SourceAccount.Address() == emptyAddress {
-        e := txn.MutateTX(
+        e = txn.MutateTX(
             // we assume that the accountID uses the master key, this can also be the accountID
             &b.SourceAccount{AddressOrSeed: secretKey},
             &b.AutoSequence{SequenceProvider: horizonClient},
@@ -57,7 +64,7 @@ func main() {
             log.Fatal(e)
         }
     } else if txn.E.Tx.SeqNum == 0 {
-        e := txn.MutateTX(
+        e = txn.MutateTX(
             // do not need to set the source account here, only the sequence number
             &b.AutoSequence{SequenceProvider: horizonClient},
             // need to reset the network passphrase
@@ -68,19 +75,19 @@ func main() {
         }
     }
 
-    // 4. sign the transaction envelope
-    e := txn.Mutate(&b.Sign{Seed: secretKey})
+    // 5. sign the transaction envelope
+    e = txn.Mutate(&b.Sign{Seed: secretKey})
     if e != nil {
         log.Fatal(e)
     }
 
-    // 5. convert the transaction to base64
+    // 6. convert the transaction to base64
     reencodedTxnBase64, e := txn.Base64()
     if e != nil {
         log.Fatal("failed to convert to base64: ", e)
     }
 
-    // 6. submit to the network
+    // 7. submit to the network
     resp, e := horizonClient.SubmitTransaction(reencodedTxnBase64)
     if e != nil {
         log.Fatal(e)
@@ -114,16 +121,16 @@ func decodeFromBase64(encodedXdr string) *b.TransactionEnvelopeBuilder {
 }
 
 // boilerplate to parse command line args and to make this implementation functional
-func parseInputs() (secretKey string, encodedInputTxn string) {
+func parseInputs() (secretKey string, uriString string) {
     // assumes that the signing account uses only the master key to sign transactions
     secretKeyPtr := flag.String("secretKey", "", "secret key to sign the transaction")
-    txnPtr := flag.String("txn", "", "encoded XDR Transaction to be signed and submitted")
+    uriPtr := flag.String("uri", "", "URI Request that contains the XDR Transaction to be signed and submitted, only supports a limited set of operations for SEP7")
     flag.Parse()
 
-    if *secretKeyPtr == "" || *txnPtr == "" {
+    if *secretKeyPtr == "" || *uriPtr == "" {
         fmt.Println("Params:")
         flag.PrintDefaults()
         os.Exit(1)
     }
-    return *secretKeyPtr, *txnPtr
+    return *secretKeyPtr, *uriPtr
 }
