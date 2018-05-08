@@ -28,13 +28,13 @@ limitations under the License.
                 var url = new URL(url_string);
                 var req_url_string = url.searchParams.get("req");
                 console.log(req_url_string)
-                document.getElementById("req").innerHTML = req_url_string;
+                document.getElementById("req").innerText = req_url_string;
 
                 // extract the xdr from the payment request
                 var req_url = new URL(req_url_string);
                 var xdr_string = req_url.searchParams.get("xdr");
                 console.log(xdr_string)
-                document.getElementById("xdr").innerHTML = xdr_string;
+                document.getElementById("xdr").innerText = xdr_string;
             }
         </script>
     </head>
