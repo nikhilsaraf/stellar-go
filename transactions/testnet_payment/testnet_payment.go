@@ -71,20 +71,22 @@ func main() {
         creditAmount := b.CreditAmount{assetParts[0], issuerAddress, amountStr}
         fmt.Println("using non-native asset:", creditAmount)
 
-        // if source account is issuer it does not need to hold the asset
+        // if source account is issuer it does not need to trust the asset
         if !hasAsset(&sourceAccount, &creditAmount) && sourceAddress != issuerAddress {
-            log.Fatal(fmt.Sprintf("source account does not hold asset: %v", creditAmount))
+            log.Fatal(fmt.Sprintf("source account does not trust asset: %v", creditAmount))
         }
-        if !hasAsset(&destinationAccount, &creditAmount) {
+
+        // if destination account is issuer it does not need to trust the asset
+        if !hasAsset(&destinationAccount, &creditAmount) && destinationAddress != issuerAddress {
             log.Fatal(fmt.Sprintf("destination account does not trust asset: %v", creditAmount))
         }
+
         assetAmount = creditAmount
     } else {
         assetAmount = b.NativeAmount{amountStr}
     }
 
-
-    txn := b.Transaction(
+    txn, e := b.Transaction(
         b.SourceAccount{sourceSeed},
         b.AutoSequence{horizonClient},
         b.TestNetwork,
@@ -93,22 +95,30 @@ func main() {
             assetAmount,
         ),
     )
+    if e != nil {
+        log.Fatal(e)
+    }
     if memo != "" {
         txn.Mutate(b.MemoText{memo})
     }
+
     // sign
-    txnS := txn.Sign(sourceSeed)
+    txnS, e := txn.Sign(sourceSeed)
+    if e != nil {
+        log.Fatal(e)
+    }
+
     // convert to base64
-    txnS64, err2 := txnS.Base64()
-    if err2 != nil {
-        log.Fatal(err2)
+    txnS64, e := txnS.Base64()
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Printf("tx base64: %s\n", txnS64)
 
     // submit the transaction
-    resp, err3 := horizonClient.SubmitTransaction(txnS64)
-    if err3 != nil {
-        log.Fatal(err3)
+    resp, e := horizonClient.SubmitTransaction(txnS64)
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Println("transaction posted in ledger:", resp.Ledger)
 
@@ -122,6 +132,7 @@ func loadAccount(horizonClient *horizon.Client, publicKey string, accountName st
     if err != nil {
         log.Fatal(err)
     }
+    fmt.Println()
     fmt.Println("Balances for account (" + accountName + "):")
     for _, balance := range account.Balances {
         log.Println("   ", balance)
