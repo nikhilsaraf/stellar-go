@@ -4,7 +4,6 @@ import (
     "fmt"
     "flag"
     "log"
-    "net/http"
     "github.com/stellar/go/clients/horizon"
     "bufio"
     "os"
@@ -12,37 +11,48 @@ import (
     b "github.com/stellar/go/build"
 )
 
-const baseUrl = "https://horizon-testnet.stellar.org"
-
 func main() {
     addressPtr := flag.String("a", "", "string representing the inflation destination address to be used")
+    usePublicPtr := flag.Bool("p", false, "use the public network (defaults to test network")
     flag.Parse()
 
     inflationAddress := *addressPtr
-    fmt.Println("inflation destination:", inflationAddress)
-
-    horizonClient := &horizon.Client{
-        URL:  baseUrl,
-        HTTP: http.DefaultClient,
+    horizonClient := horizon.DefaultTestNetClient
+    net := b.TestNetwork
+    if *usePublicPtr {
+        horizonClient = horizon.DefaultPublicNetClient
+        net = b.PublicNetwork
     }
-    loadAccount(horizonClient, inflationAddress, "inflation address")
+    fmt.Println("inflation destination:", inflationAddress)
+    fmt.Println("network:", net)
+
+    if inflationAddress != "" {
+        loadAccount(horizonClient, inflationAddress, "inflation address")
+    }
     log.Println()
 
+    fmt.Print("Enter secret key: ")
     reader := bufio.NewReader(os.Stdin)
     secret, _ := reader.ReadString('\n')
     secret = strings.Replace(secret, "\n", "", -1)
     fmt.Println("\nreceived secret key, setting inflation destination now.\n")
 
-    txn := b.Transaction(
+    txn, err := b.Transaction(
         b.SourceAccount{secret},
         b.AutoSequence{horizonClient},
-        b.TestNetwork,
+        net,
         b.SetOptions(
             b.InflationDest(inflationAddress),
         ),
     )
+    if err != nil {
+        log.Fatal(err)
+    }
     // sign
-    txnS := txn.Sign(secret)
+    txnS, err := txn.Sign(secret)
+    if err != nil {
+        log.Fatal(err)
+    }
     // convert to base64
     txnS64, err := txnS.Base64()
     if err != nil {
@@ -51,9 +61,9 @@ func main() {
     fmt.Printf("tx base64: %s\n\n", txnS64)
 
     // submit the transaction
-    resp, err2 := horizonClient.SubmitTransaction(txnS64)
-    if err2 != nil {
-        log.Fatal(err2)
+    resp, err := horizonClient.SubmitTransaction(txnS64)
+    if err != nil {
+        log.Fatal(err)
     }
     fmt.Println("transaction posted in ledger:", resp.Ledger)
 }
