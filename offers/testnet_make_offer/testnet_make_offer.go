@@ -66,9 +66,9 @@ func main() {
     }
 
     sourceSeed := *sourceSeedPtr
-    sourceKP, err := keypair.Parse(sourceSeed)
-    if err != nil {
-        log.Fatal(err)
+    sourceKP, e := keypair.Parse(sourceSeed)
+    if e != nil {
+        log.Fatal(e)
     }
     sourceAddress := sourceKP.Address()
     sellingAsset := parseAsset(sellingAssetCodePtr, sellingIssuerCodePtr)
@@ -110,25 +110,31 @@ func main() {
         ob = b.CreateOffer(rate, amount)
     }
 
-    txn := b.Transaction(
+    txn, e := b.Transaction(
         b.SourceAccount{sourceSeed},
         b.AutoSequence{horizonClient},
         b.TestNetwork,
         ob,
     )
+    if e != nil {
+        log.Fatal(e)
+    }
     // sign
-    txnS := txn.Sign(sourceSeed)
+    txnS, e := txn.Sign(sourceSeed)
+    if e != nil {
+        log.Fatal(e)
+    }
     // convert to base64
-    txnS64, err2 := txnS.Base64()
-    if err2 != nil {
-        log.Fatal(err2)
+    txnS64, e := txnS.Base64()
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Printf("tx base64: %s\n", txnS64)
 
     // submit the transaction
-    resp, err3 := horizonClient.SubmitTransaction(txnS64)
-    if err3 != nil {
-        log.Fatal(err3)
+    resp, e := horizonClient.SubmitTransaction(txnS64)
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Println("transaction posted in ledger:", resp.Ledger)
     fmt.Println("response:")
@@ -139,9 +145,9 @@ func main() {
 }
 
 func loadAccount(horizonClient *horizon.Client, publicKey string, accountName string) horizon.Account {
-    account, err := horizonClient.LoadAccount(publicKey)
-    if err != nil {
-        log.Fatal(err)
+    account, e := horizonClient.LoadAccount(publicKey)
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Println("Balances for account (" + accountName + "):")
     for _, balance := range account.Balances {

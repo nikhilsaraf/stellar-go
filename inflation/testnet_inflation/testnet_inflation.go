@@ -23,25 +23,31 @@ func main() {
         URL:  baseUrl,
         HTTP: http.DefaultClient,
     }
-    txn := b.Transaction(
+    txn, e := b.Transaction(
         b.SourceAccount{secret},
         b.AutoSequence{horizonClient},
         b.TestNetwork,
         b.Inflation(),
     )
+    if e != nil {
+        log.Fatal(e)
+    }
     // sign
-    txnS := txn.Sign(secret)
+    txnS, e := txn.Sign(secret)
+    if e != nil {
+        log.Fatal(e)
+    }
     // convert to base64
-    txnS64, err := txnS.Base64()
-    if err != nil {
-        log.Fatal(err)
+    txnS64, e := txnS.Base64()
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Printf("tx base64: %s\n\n", txnS64)
 
     // submit the transaction
-    resp, err2 := horizonClient.SubmitTransaction(txnS64)
-    if err2 != nil {
-        log.Fatal(err2)
+    resp, e := horizonClient.SubmitTransaction(txnS64)
+    if e != nil {
+        log.Fatal(e)
     }
     fmt.Println("transaction posted in ledger:", resp.Ledger)
 }
