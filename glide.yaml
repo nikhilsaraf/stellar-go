@@ -1,0 +1,14 @@
+package: github.com/nikhilsaraf/stellar-go
+import:
+- package: github.com/kr/pretty
+  version: v0.1.0
+- package: github.com/stellar/go
+  version: a3adccc1371114476a35a5e0ed749294dfb1c703
+  subpackages:
+  - build
+  - clients/horizon
+  - keypair
+  - xdr
+- package: golang.org/x/net
+  subpackages:
+  - context

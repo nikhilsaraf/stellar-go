@@ -1,0 +1,76 @@
+hash: 604d9fa8b2570d792f4d039ff49dbfc82f48915f729ef44d8523d2ca972e0a2e
+updated: 2018-11-19T18:32:10.119641-08:00
+imports:
+- name: github.com/agl/ed25519
+  version: 278e1ec8e8a6e017cd07577924d6766039146ced
+  subpackages:
+  - edwards25519
+- name: github.com/davecgh/go-spew
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
+  subpackages:
+  - spew
+- name: github.com/go-errors/errors
+  version: a41850380601eeb43f4350f7d17c6bbd8944aaf8
+- name: github.com/kr/pretty
+  version: 73f6ac0b30a98e433b289500d779f50c1a6f0712
+- name: github.com/kr/text
+  version: e2ffdb16a802fe2bb95e2e35ff34f0e53aeef34f
+- name: github.com/lib/pq
+  version: 50761b0867bd1d9d069276790bcd4a3bccf2324a
+  subpackages:
+  - oid
+- name: github.com/manucorporat/sse
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/pmezard/go-difflib
+  version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
+  subpackages:
+  - difflib
+- name: github.com/segmentio/go-loggly
+  version: eb91657e62b25699dd4e84d5562735440d4beace
+- name: github.com/sirupsen/logrus
+  version: 68cec9f21fbf3ea8d8f98c044bc6ce05f17b267a
+  subpackages:
+  - hooks/test
+- name: github.com/stellar/go
+  version: a3adccc1371114476a35a5e0ed749294dfb1c703
+  subpackages:
+  - amount
+  - build
+  - clients/horizon
+  - crc16
+  - hash
+  - keypair
+  - network
+  - price
+  - protocols/horizon
+  - protocols/horizon/base
+  - strkey
+  - support/errors
+  - support/http/mutil
+  - support/log
+  - support/render/hal
+  - support/render/problem
+  - support/url
+  - xdr
+- name: github.com/stellar/go-xdr
+  version: 0bc96f33a18ef2f963e75431dbed042129eb421b
+  subpackages:
+  - xdr3
+- name: github.com/stretchr/objx
+  version: cbeaeb16a013161a98496fad62933b1d21786672
+- name: github.com/stretchr/testify
+  version: 976c720a22c8eb4eb6a0b4348ad85ad12491a506
+  subpackages:
+  - assert
+  - mock
+- name: golang.org/x/net
+  version: 9bc2a3340c92c17a20edcd0080e93851ed58f5d5
+  subpackages:
+  - context
+- name: golang.org/x/sys
+  version: 1f5e250e1174502017917628cc48b52fdc25b531
+  subpackages:
+  - unix
+testImports: []
